@@ -1,209 +1,60 @@
 ConversionRate Apr-May =
-UNION(
+VAR StatusMap = DATATABLE(
+    "StatusName", STRING,
+    "StatusOrder", INTEGER,
+    {
+        {"L0: unqualifiziert", 0},
+        {"L1: bewertet", 1},
+        {"L2: qualifiziert", 2},
+        {"L3: Konditionen akzeptiert", 3},
+        {"L4: Flächen gesichert", 4},
+        {"L5: Projekt gesichert", 5},
+        {"M1: Aufstellungsbeschluss", 6},
+        {"M2: Satzungsbeschluss", 7},
+        {"lost", 99}
+    }
+)
 
-    /* ---------- L0  →  L1 ---------- */
-    SELECTCOLUMNS(
-        FILTER(
-            'StatusHistorie_Projekte2025_Monat_Größe',
-            [Apr 2025] = "L0: unqualifiziert"  &&
-            [May 2025] IN {
-                "L1: bewertet","L2: qualifiziert","L3: Konditionen akzeptiert",
-                "L4: Flächen gesichert","L5: Projekt gesichert",
-                "M1: Aufstellungsbeschluss","M2: Satzungsbeschluss"
-            }
-        ),
-        "ProjektID",               [ProjektID],
-        "ProjektName",             [ProjektName],
-        "Projektverantwortlicher", [Projektverantwortlicher],
-        "Status_Apr2025",          [Apr 2025],
-        "Status_May2025",          [May 2025],
-        "Conversion",              "L0 → L1",
-        "Category",                "Neu in L0 → L1"
-    ),
-    SELECTCOLUMNS(
-        FILTER(
-            'StatusHistorie_Projekte2025_Monat_Größe',
-            [Apr 2025] = "L0: unqualifiziert" &&
-            [May 2025] = "lost"
-        ),
-        "ProjektID",               [ProjektID],
-        "ProjektName",             [ProjektName],
-        "Projektverantwortlicher", [Projektverantwortlicher],
-        "Status_Apr2025",          [Apr 2025],
-        "Status_May2025",          [May 2025],
-        "Conversion",              "L0 → L1",
-        "Category",                "Lost aus L0 → L1"
-    ),
+VAR ConversionFunnels = DATATABLE(
+    "FunnelName", STRING,
+    "FromStatusOrder", INTEGER,
+    "ToStatusOrder", INTEGER,
+    {
+        {"L0 → L1", 0, 1},
+        {"L1 → L2", 1, 2},
+        {"L2 → L3", 2, 3},
+        {"L3 → L4", 3, 4},
+        {"L4 → L5", 4, 5},
+        {"L5 → M1", 5, 6}
+    }
+)
 
-    /* ---------- L1  →  L2 ---------- */
-    SELECTCOLUMNS(
-        FILTER(
-            'StatusHistorie_Projekte2025_Monat_Größe',
-            [Apr 2025] IN { "L0: unqualifiziert","L1: bewertet" }  &&
-            [May 2025] IN {
-                "L2: qualifiziert","L3: Konditionen akzeptiert","L4: Flächen gesichert",
-                "L5: Projekt gesichert","M1: Aufstellungsbeschluss","M2: Satzungsbeschluss"
-            }
-        ),
-        "ProjektID",               [ProjektID],
-        "ProjektName",             [ProjektName],
-        "Projektverantwortlicher", [Projektverantwortlicher],
-        "Status_Apr2025",          [Apr 2025],
-        "Status_May2025",          [May 2025],
-        "Conversion",              "L1 → L2",
-        "Category",                "Neu in L1 → L2"
-    ),
-    SELECTCOLUMNS(
-        FILTER(
-            'StatusHistorie_Projekte2025_Monat_Größe',
-            [Apr 2025] = "L1: bewertet" &&
-            [May 2025] = "lost"
-        ),
-        "ProjektID",               [ProjektID],
-        "ProjektName",             [ProjektName],
-        "Projektverantwortlicher", [Projektverantwortlicher],
-        "Status_Apr2025",          [Apr 2025],
-        "Status_May2025",          [May 2025],
-        "Conversion",              "L1 → L2",
-        "Category",                "Lost aus L1 → L2"
-    ),
+VAR EnrichedTable =
+ADDCOLUMNS(
+    'StatusHistorie_Projekte2025_Monat_Größe',
+    "AprStatusOrder", LOOKUPVALUE(StatusMap[StatusOrder], StatusMap[StatusName], [Apr 2025]),
+    "MayStatusOrder", LOOKUPVALUE(StatusMap[StatusOrder], StatusMap[StatusName], [May 2025])
+)
 
-    /* ---------- L2  →  L3 ---------- */
-    SELECTCOLUMNS(
-        FILTER(
-            'StatusHistorie_Projekte2025_Monat_Größe',
-            [Apr 2025] IN { "L0: unqualifiziert","L1: bewertet","L2: qualifiziert" } &&
-            [May 2025] IN {
-                "L3: Konditionen akzeptiert","L4: Flächen gesichert","L5: Projekt gesichert",
-                "M1: Aufstellungsbeschluss","M2: Satzungsbeschluss"
-            }
-        ),
-        "ProjektID",               [ProjektID],
-        "ProjektName",             [ProjektName],
-        "Projektverantwortlicher", [Projektverantwortlicher],
-        "Status_Apr2025",          [Apr 2025],
-        "Status_May2025",          [May 2025],
-        "Conversion",              "L2 → L3",
-        "Category",                "Neu in L2 → L3"
-    ),
-    SELECTCOLUMNS(
-        FILTER(
-            'StatusHistorie_Projekte2025_Monat_Größe',
-            [Apr 2025] = "L2: qualifiziert" &&
-            [May 2025] = "lost"
-        ),
-        "ProjektID",               [ProjektID],
-        "ProjektName",             [ProjektName],
-        "Projektverantwortlicher", [Projektverantwortlicher],
-        "Status_Apr2025",          [Apr 2025],
-        "Status_May2025",          [May 2025],
-        "Conversion",              "L2 → L3",
-        "Category",                "Lost aus L2 → L3"
-    ),
-
-    /* ---------- L3  →  L4 ---------- */
-    SELECTCOLUMNS(
-        FILTER(
-            'StatusHistorie_Projekte2025_Monat_Größe',
-            [Apr 2025] IN {
-                "L0: unqualifiziert","L1: bewertet","L2: qualifiziert","L3: Konditionen akzeptiert"
-            } &&
-            [May 2025] IN {
-                "L4: Flächen gesichert","L5: Projekt gesichert",
-                "M1: Aufstellungsbeschluss","M2: Satzungsbeschluss"
-            }
-        ),
-        "ProjektID",               [ProjektID],
-        "ProjektName",             [ProjektName],
-        "Projektverantwortlicher", [Projektverantwortlicher],
-        "Status_Apr2025",          [Apr 2025],
-        "Status_May2025",          [May 2025],
-        "Conversion",              "L3 → L4",
-        "Category",                "Neu in L3 → L4"
-    ),
-    SELECTCOLUMNS(
-        FILTER(
-            'StatusHistorie_Projekte2025_Monat_Größe',
-            [Apr 2025] = "L3: Konditionen akzeptiert" &&
-            [May 2025] = "lost"
-        ),
-        "ProjektID",               [ProjektID],
-        "ProjektName",             [ProjektName],
-        "Projektverantwortlicher", [Projektverantwortlicher],
-        "Status_Apr2025",          [Apr 2025],
-        "Status_May2025",          [May 2025],
-        "Conversion",              "L3 → L4",
-        "Category",                "Lost aus L3 → L4"
-    ),
-
-    /* ---------- L4  →  L5 ---------- */
-    SELECTCOLUMNS(
-        FILTER(
-            'StatusHistorie_Projekte2025_Monat_Größe',
-            [Apr 2025] IN {
-                "L0: unqualifiziert","L1: bewertet","L2: qualifiziert",
-                "L3: Konditionen akzeptiert","L4: Flächen gesichert"
-            } &&
-            [May 2025] IN {
-                "L5: Projekt gesichert","M1: Aufstellungsbeschluss","M2: Satzungsbeschluss"
-            }
-        ),
-        "ProjektID",               [ProjektID],
-        "ProjektName",             [ProjektName],
-        "Projektverantwortlicher", [Projektverantwortlicher],
-        "Status_Apr2025",          [Apr 2025],
-        "Status_May2025",          [May 2025],
-        "Conversion",              "L4 → L5",
-        "Category",                "Neu in L4 → L5"
-    ),
-    SELECTCOLUMNS(
-        FILTER(
-            'StatusHistorie_Projekte2025_Monat_Größe',
-            [Apr 2025] = "L4: Flächen gesichert" &&
-            [May 2025] = "lost"
-        ),
-        "ProjektID",               [ProjektID],
-        "ProjektName",             [ProjektName],
-        "Projektverantwortlicher", [Projektverantwortlicher],
-        "Status_Apr2025",          [Apr 2025],
-        "Status_May2025",          [May 2025],
-        "Conversion",              "L4 → L5",
-        "Category",                "Lost aus L4 → L5"
-    ),
-
-    /* ---------- L5  →  M1 ---------- */
-    SELECTCOLUMNS(
-        FILTER(
-            'StatusHistorie_Projekte2025_Monat_Größe',
-            [Apr 2025] IN {
-                "L0: unqualifiziert","L1: bewertet","L2: qualifiziert","L3: Konditionen akzeptiert",
-                "L4: Flächen gesichert","L5: Projekt gesichert"
-            } &&
-            [May 2025] IN {
-                "M1: Aufstellungsbeschluss","M2: Satzungsbeschluss"
-            }
-        ),
-        "ProjektID",               [ProjektID],
-        "ProjektName",             [ProjektName],
-        "Projektverantwortlicher", [Projektverantwortlicher],
-        "Status_Apr2025",          [Apr 2025],
-        "Status_May2025",          [May 2025],
-        "Conversion",              "L5 → M1",
-        "Category",                "Neu in L5 → M1"
-    ),
-    SELECTCOLUMNS(
-        FILTER(
-            'StatusHistorie_Projekte2025_Monat_Größe',
-            [Apr 2025] = "L5: Projekt gesichert" &&
-            [May 2025] = "lost"
-        ),
-        "ProjektID",               [ProjektID],
-        "ProjektName",             [ProjektName],
-        "Projektverantwortlicher", [Projektverantwortlicher],
-        "Status_Apr2025",          [Apr 2025],
-        "Status_May2025",          [May 2025],
-        "Conversion",              "L5 → M1",
-        "Category",                "Lost aus L5 → M1"
+VAR GeneratedConversions =
+FILTER(
+    CROSSJOIN(EnrichedTable, ConversionFunnels),
+    (
+        // Successful conversions
+        ([AprStatusOrder] <= [FromStatusOrder] && [MayStatusOrder] >= [ToStatusOrder]) ||
+        // Lost conversions
+        ([AprStatusOrder] = [FromStatusOrder] && [MayStatusOrder] = 99)
     )
+)
 
-)  /* Ende UNION */
+RETURN
+SELECTCOLUMNS(
+    GeneratedConversions,
+    "ProjektID", [ProjektID],
+    "ProjektName", [ProjektName],
+    "Projektverantwortlicher", [Projektverantwortlicher],
+    "Status_Apr2025", [Apr 2025],
+    "Status_May2025", [May 2025],
+    "Conversion", [FunnelName],
+    "Category", IF([MayStatusOrder] = 99, "Lost aus " & [FunnelName], "Neu in " & [FunnelName])
+)
